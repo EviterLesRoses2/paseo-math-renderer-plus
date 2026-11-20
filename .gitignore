@@ -1,0 +1,8 @@
+node_modules/
+server/generated/
+shared/generated/
+coverage/
+dist/
+.vite/
+.DS_Store
+*.log
