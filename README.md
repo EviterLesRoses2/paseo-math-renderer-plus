@@ -11,7 +11,7 @@ Math Renderer Plus typesets LaTeX in completed Paseo replies. It runs MathJax 4 
 Requires Paseo 0.13 or newer, with plugins enabled on the selected daemon. Node.js 22 or later and npm are required on that host to prepare a Git installation.
 
 ```sh
-paseo plugin install git:EviterLesRoses2/paseo-math-renderer-plus --ref v0.1.0
+paseo plugin install git:EviterLesRoses2/paseo-math-renderer-plus --ref v0.1.1
 paseo plugin ls math-renderer-plus
 ```
 
@@ -21,7 +21,7 @@ Enable one assistant-message math renderer per host. Running multiple timeline t
 
 Write inline math with `\(...\)` or `$...$`. Use `$$...$$`, `\[...\]`, or a fenced `math` block for display math. Formulas appear once the reply is complete.
 
-Block formulas have **Show LaTeX** and **Copy LaTeX** actions. Long formulas scroll horizontally. A failed formula preserves the original source and gives the reason. The **Retry** action appears for temporary communication or renderer failures.
+Block formulas have **Show LaTeX** and **Copy LaTeX** actions. Long formulas and tables scroll horizontally. Formulas inside Markdown tables render with the rest of the reply. A failed formula preserves the original source and gives the reason. The **Retry** action appears for temporary communication or renderer failures.
 
 The bundled parser supports AMS, AMS CD, boldsymbol, mathtools, cases, cancel, centernot, braket, upgreek, extpfeil, gensymb, textmacros, and physics commands. It covers matrices, aligned equations, common calculus and physics notation, and closed surface and volume integrals. Chinese text uses Noto Sans CJK SC regular. Unavailable characters, custom macro definitions, external links and resources inside formulas, and oversized expressions fall back to source. Large replies can also keep Paseo's original Markdown view.
 

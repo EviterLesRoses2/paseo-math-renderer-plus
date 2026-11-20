@@ -31,15 +31,19 @@ describe("Paseo 0.13.2 whole-message presentation", () => {
   });
   it.each([
     "Inline $x$ next to ![plot](https://example.com/plot.png)",
-    "| $a$ | b |\n|---|---|\n| 1 | 2 |",
     "See [File](./file.ts) for $x$",
     "$$x^2$$\n\n" + "a".repeat(96000),
-    Array(65).fill("$$x$$").join("\n\n"),
+    Array(257).fill("$x$").join(" "),
   ])("keeps unsupported or oversized whole replies native", text => {
     const source = message(text);
     const rows = createStreamPresentation()(input([], [source])).tail;
     expect(rows).toEqual([source]);
     expect(rows).toEqual(createStreamPresentation()({ ...input([], [source]), transform: undefined }).tail);
+  });
+  it("keeps the plugin active in a long reply with a formula table", () => {
+    const text = "| $a$ | b |\n|---|---|\n| 1 | 2 |\n\n" + Array(65).fill("$$x$$").join("\n\n");
+    const rows = createStreamPresentation()(input([], [message(text)])).tail;
+    expect(rows[0]).toMatchObject({ kind: "plugin", data: { text } });
   });
   it.each(["overview", "detailed"])("leaves tools unchanged in %s", level => {
     const tool = id => ({ id, kind: "tool_call", timestamp: new Date(0), payload: { source: "agent", data: {

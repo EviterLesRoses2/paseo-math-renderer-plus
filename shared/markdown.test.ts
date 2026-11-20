@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseDocument } from "./markdown";
+import { MAX_FORMULAS } from "./contracts";
 import { transformMessage } from "../client/transform";
 
 const math = "$$x^2$$";
@@ -58,9 +59,33 @@ describe("conservative Markdown + display math", () => {
     const blocks = parseDocument("[r]: https://example.com\n\n" + math + "\n\n```\ncode")!.blocks;
     expect(blocks.at(-1)).toEqual({ kind: "markdown", text: "```\ncode" });
   });
-  it.each(["![i](https://example.com/x.png) and $x$", "[file](./a.ts) for $x$", "|$a$|b|\n|-|-|\n|1|2|",
-    "<b>hi</b> $x$", "[email](mailto:x@example.com) $x$", "- ![i](https://example.com/x.png)\n- $x$"])("keeps the reply native when an unsupported construct shares a formula block: %s", text => {
-    expect(parseDocument(text)).toBeNull();
+  it.each(["![i](https://example.com/x.png) and $x$", "[file](./a.ts) for $x$",
+    "<b>hi</b> $x$", "[email](mailto:x@example.com) $x$", "- ![i](https://example.com/x.png)\n- $x$"])("keeps only the unsupported group native: %s", text => {
+    expect(transformMessage({ item: { type: "assistant_message", text }, phase: "complete" })).toBeUndefined();
+    expect(parseDocument(math + "\n\n" + text + "\n\n$$y$$")?.blocks).toEqual([
+      { kind: "math", tex: "x^2", raw: math },
+      { kind: "markdown", text },
+      { kind: "math", tex: "y", raw: "$$y$$" },
+    ]);
+  });
+  it("renders a list, math table and later paragraph in a reply with more than 64 formulas", () => {
+    const list = "- **Update $x_k$**\n  $$x_{k+1}=x_k-hg_k$$";
+    const table = "| Quantity | $k$ |\n| :---: | ---: |\n| **Gradient $g_k$** | $1/h$ |";
+    const paragraph = Array.from({ length: 65 }, (_, i) => "$x_{" + i + "}$").join(" ");
+    const text = [list, table, paragraph].join("\n\n");
+    const doc = parseDocument(text);
+    expect(doc?.formulas).toBe(70);
+    expect(doc?.blocks.map(block => block.kind)).toEqual(["list", "table", "paragraph"]);
+    expect(doc?.blocks[1]).toMatchObject({
+      kind: "table",
+      rows: [
+        { header: true, cells: [{ align: "center" }, { align: "right", inline: [{ kind: "math", tex: "k" }] }] },
+        { header: false, cells: [{ inline: expect.arrayContaining([expect.objectContaining({ kind: "strong",
+          children: expect.arrayContaining([expect.objectContaining({ kind: "math", tex: "g_k" })]),
+        })]) }, { inline: [{ kind: "math", tex: "1/h" }] }] },
+      ],
+    });
+    expect(transformMessage({ item: { type: "assistant_message", text }, phase: "complete" })).toBeDefined();
   });
   it("keeps raw input and delegates replacement identity to the host", () => {
     const text = math + "\n\nMore";
@@ -74,9 +99,12 @@ describe("conservative Markdown + display math", () => {
   it("bounds large or empty input and formula count", () => {
     expect(parseDocument("")).toBeNull();
     expect(parseDocument(math + "x".repeat(96_000))).toBeNull();
-    expect(parseDocument(Array(64).fill(math).join("\n\n"))?.formulas).toBe(64);
-    expect(parseDocument(Array(65).fill(math).join("\n\n"))).toBeNull();
-    expect(parseDocument(Array(65).fill("$x$").join(" "))).toBeNull();
+    const long = Array(MAX_FORMULAS + 1).fill(math).join("\n\n");
+    const doc = parseDocument(long);
+    expect(doc?.formulas).toBe(MAX_FORMULAS);
+    expect(doc?.blocks.at(-1)).toEqual({ kind: "markdown", text: math });
+    const giantParagraph = Array(MAX_FORMULAS + 1).fill("$x$").join(" ");
+    expect(parseDocument(giantParagraph + "\n\n" + math)?.formulas).toBe(1);
   });
   it.each(["> ```math\n> x^2\n> ```", "- item\n\n  $$\n  x^2\n  $$"])("handles nested math without flattening containers: %s", text => {
     expect(parseDocument(text)?.formulas).toBe(1);

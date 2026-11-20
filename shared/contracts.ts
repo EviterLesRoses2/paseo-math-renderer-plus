@@ -2,7 +2,7 @@ import { defineRpc } from "@getpaseo/plugin";
 import { z } from "zod";
 
 export const MAX_TEXT = 96_000;
-export const MAX_FORMULAS = 64;
+export const MAX_FORMULAS = 256;
 export const MAX_TEX = 4096;
 export const renderInput = z.object({
   tex: z.string().trim().min(1).max(MAX_TEX),

@@ -94,7 +94,9 @@ check(parse("Prose\\n\\n$$x^2$$").blocks[0].text === "Prose", "Formula-free bloc
   check(transformer.transform({ item: { type: "assistant_message", text: text }, phase: "complete" }) === undefined, "Native fallback failed");
 });
 check(parse("") === null && parse("x".repeat(96001)) === null, "Input limits failed");
-check(parse(Array(65).fill("$$x$$").join("\\n\\n")) === null, "Formula limit failed");
+check(parse(Array(65).fill("$$x$$").join("\\n\\n")).formulas === 65, "Long reply failed");
+check(parse(Array(257).fill("$x$").join(" ")).formulas === 0, "Formula limit failed");
+check(parse("| $x$ | y |\\n| --- | --- |").blocks[0].kind === "table", "Math table failed");
 check(commands.length === 2, "Missing native/Math actions");
 commands[0].onSelect(); commands[0].onSelect();
 check(removed.length === 1 && removed[0] === transformer, "Native action must remove only the transformer once");

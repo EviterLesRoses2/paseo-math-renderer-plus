@@ -12,12 +12,15 @@ export type Inline =
   | { kind: "math"; tex: string; raw: string }
   | { kind: "strong" | "em" | "strike"; children: Inline[] }
   | { kind: "link"; href: string; children: Inline[] };
+export type TableCell = { inline: Inline[]; align: "left" | "center" | "right" };
+export type TableRow = { header: boolean; cells: TableCell[] };
 export type Block =
   | { kind: "paragraph" | "heading"; inline: Inline[]; level: number }
   | { kind: "code" | "pending"; text: string }
   | { kind: "math"; tex: string; raw: string }
   | { kind: "quote" | "list" | "item"; children: Block[]; start: number }
   | { kind: "rule" }
+  | { kind: "table"; rows: TableRow[] }
   // Top level only: consecutive formula-free source blocks for the host Markdown renderer.
   | { kind: "markdown"; text: string };
 export type Document = { blocks: Block[]; formulas: number };
@@ -124,6 +127,30 @@ function inline(tokens: Token[]): Inline[] {
   }
   return take();
 }
+function readTable(tokens: Token[]): TableRow[] {
+  const rows: TableRow[] = [];
+  let header = false;
+  let row: TableRow | undefined;
+  let cell: TableCell | undefined;
+  for (const token of tokens) {
+    if (token.type === "thead_open") header = true;
+    else if (token.type === "thead_close") header = false;
+    else if (token.type === "tr_open") {
+      row = { header, cells: [] };
+      rows.push(row);
+    } else if (token.type === "th_open" || token.type === "td_open") {
+      if (!row) throw new Error("Missing table row");
+      const alignment = token.attrGet("style");
+      cell = { inline: [], align: alignment === "text-align:center" ? "center"
+        : alignment === "text-align:right" ? "right" : "left" };
+      row.cells.push(cell);
+    } else if (token.type === "inline") {
+      if (!cell) throw new Error("Missing table cell");
+      cell.inline = inline(token.children ?? []);
+    } else if (token.type === "th_close" || token.type === "td_close") cell = undefined;
+  }
+  return rows;
+}
 function inlineFormulas(items: Inline[]): number {
   return items.reduce((n, item) => n + (item.kind === "math" ? 1 : "children" in item ? inlineFormulas(item.children) : 0), 0);
 }
@@ -142,8 +169,8 @@ function hasMath(tokens: Token[], text: string) {
 }
 // Top-level blocks with a formula become plugin blocks. Consecutive formula-free blocks
 // stay one exact source slice for the host Markdown component, which also renders
-// tables, images, HTML and file links. An unsupported construct inside a formula
-// block still keeps the whole reply native.
+// tables, images, HTML and file links. If a group cannot be rendered, keep that
+// source slice native and continue with the next group.
 export function parseDocument(text: string): Document | null {
   if (!text || text.length > MAX_TEXT) return null;
   try {
@@ -166,6 +193,14 @@ export function parseDocument(text: string): Document | null {
           out.push({ kind: t.type === "paragraph_open" ? "paragraph" : "heading",
             inline: items, level: Number(t.tag.slice(1)) || 0 });
           if (tokens[i++]?.type !== t.type.replace("_open", "_close")) throw new Error("Unclosed block");
+        } else if (t.type === "table_open") {
+          const start = i;
+          while (i < stop && tokens[i].type !== "table_close") i++;
+          const rows = readTable(tokens.slice(start, i));
+          i++;
+          for (const row of rows)
+            for (const cell of row.cells) formulas += inlineFormulas(cell.inline);
+          out.push({ kind: "table", rows });
         } else if (t.type === "math_block" || (t.type === "fence" && t.info.trim() === "math" && closedFence(t, text))) {
           formulas++;
           out.push({ kind: "math", tex: t.type === "fence" ? fencedTex(t.content) : t.content.trim(), raw: source(t, text) });
@@ -193,18 +228,27 @@ export function parseDocument(text: string): Document | null {
       let end = i + 1;
       for (let depth = tokens[i].nesting; depth > 0; end++) depth += tokens[end].nesting;
       const group = tokens.slice(i, end);
+      const [from, to] = tokens[i].map ?? [0, 0];
+      const previousCount = formulas;
       if (hasMath(group, text)) {
-        flush();
-        blocks.push(...take(undefined, 0, end));
-      } else {
-        const [from, to] = tokens[i].map ?? [0, 0];
-        const open = group.some(t => t.type === "fence" && !closedFence(t, text));
-        native = native ? { from: native.from, to, open } : { from, to, open };
-        i = end;
+        try {
+          const rendered = take(undefined, 0, end);
+          if (formulas <= MAX_FORMULAS) {
+            flush();
+            blocks.push(...rendered);
+            continue;
+          }
+        } catch {
+          // Leave mixed content that needs the host renderer intact.
+        }
+        formulas = previousCount;
       }
+      const open = group.some(t => t.type === "fence" && !closedFence(t, text));
+      native = native ? { from: native.from, to, open } : { from, to, open };
+      i = end;
     }
     flush();
-    return formulas <= MAX_FORMULAS ? { blocks, formulas } : null;
+    return { blocks, formulas };
   } catch { return null; }
 }
 // Accept one redundant outer display pair in a math fence, without changing raw
