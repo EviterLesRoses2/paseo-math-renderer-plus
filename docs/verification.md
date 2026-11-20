@@ -1,6 +1,6 @@
 # Verification
 
-The v0.1.1 regression suite includes formula tables, long replies, isolated Markdown fallback, and bounded client request scheduling.
+The v0.1.2 regression suite passed 105 tests. It includes stretchy braces with Chinese labels, formula tables, long replies, isolated Markdown fallback, and bounded client request scheduling.
 
 The v0.1.0 suite passed 102 tests on macOS. It covers the original Maxwell equations, font metrics for Chinese labels, complete inline relations, math extensions, failure details, cache and renderer lifecycle. The client bundle passed the DOM-free and Hermes evaluation tests.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Allow nested SVG viewports used by stretchy braces inside a single formula image.
+
 ## 0.1.1
 
 - Render inline formulas inside Markdown tables and preserve column alignment.

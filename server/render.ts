@@ -64,7 +64,9 @@ export function createMathRenderer({ maxEntries = 128, maxBytes = 8_000_000 } = 
     });
     if (disposed) return stopped();
 
-    const [svg, extraSvg] = adaptor.tags(node, "svg");
+    // Stretchy operators can contain nested SVG viewports. Count only the
+    // top-level images to guard against losing part of a split formula.
+    const [svg, extraSvg] = adaptor.tags(node, "svg").filter(candidate => adaptor.parent(candidate) === node);
     if (!svg || extraSvg || adaptor.tags(svg, "text").length || adaptor.tags(svg, "image").length || adaptor.tags(svg, "a").length)
       throw new RenderFailure("blocked-command", "Formula requires unsupported SVG content");
 

@@ -11,7 +11,7 @@ Math Renderer Plus typesets LaTeX in completed Paseo replies. It runs MathJax 4 
 Requires Paseo 0.13 or newer, with plugins enabled on the selected daemon. Node.js 22 or later and npm are required on that host to prepare a Git installation.
 
 ```sh
-paseo plugin install git:EviterLesRoses2/paseo-math-renderer-plus --ref v0.1.1
+paseo plugin install git:EviterLesRoses2/paseo-math-renderer-plus --ref v0.1.2
 paseo plugin ls math-renderer-plus
 ```
 

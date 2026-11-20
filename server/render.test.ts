@@ -10,6 +10,8 @@ describe("real MathJax → embedded WASM → PNG", () => {
     String.raw`\cancel{x}+\upalpha+\degree+\centernot\implies`,
     String.raw`\braket{a|b}+\pdv{f}{x}+\qty(x+y)`,
     String.raw`\begin{dcases}x&x\geq0\\-x&x<0\end{dcases}`,
+    String.raw`z = \underbrace{a+b+c+d+e+f}_{\text{总和}}`,
+    String.raw`z = \overbrace{a+b+c+d+e+f}^{\text{总和}}`,
     String.raw`x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}`,
     String.raw`\begin{pmatrix}a&b\\c&d\end{pmatrix}`,
     String.raw`\int_0^\infty e^{-x^2}\,dx=\frac{\sqrt{\pi}}{2}`,
