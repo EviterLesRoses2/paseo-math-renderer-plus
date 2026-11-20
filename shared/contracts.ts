@@ -11,6 +11,9 @@ export const renderInput = z.object({
   scale: z.number().int().min(1).max(3),
   display: z.boolean(),
 }).strict();
+const renderErrorCode = z.enum(["unknown-command", "invalid-tex", "missing-glyph", "limit", "blocked-command", "renderer-unavailable"]);
+export type RenderErrorCode = z.output<typeof renderErrorCode>;
+
 export const renderOutput = z.discriminatedUnion("ok", [
   z.object({
     ok: z.literal(true),
@@ -20,7 +23,7 @@ export const renderOutput = z.discriminatedUnion("ok", [
     // Pixels of the image below the text baseline, for inline alignment.
     depth: z.number().min(0).max(800),
   }),
-  z.object({ ok: z.literal(false), reason: z.string().max(200) }),
+  z.object({ ok: z.literal(false), code: renderErrorCode, reason: z.string().max(200) }),
 ]);
 export type RenderInput = z.output<typeof renderInput>;
 export type RenderOutput = z.output<typeof renderOutput>;

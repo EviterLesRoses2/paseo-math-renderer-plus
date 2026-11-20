@@ -34,7 +34,7 @@ var schema = {};
   schema[key] = function() { return schema; };
 });
 var z = {};
-["object", "string", "number", "boolean", "literal", "discriminatedUnion"].forEach(function(key) {
+["object", "string", "number", "boolean", "literal", "enum", "discriminatedUnion"].forEach(function(key) {
   z[key] = function() { return schema; };
 });
 function runtimeRequire(name) {

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createMathRenderer } from "./render";
 import type { RenderInput } from "../shared/contracts";
@@ -5,6 +6,10 @@ import type { RenderInput } from "../shared/contracts";
 const input: RenderInput = { tex: "x^2", color: "#eeeeee", fontSize: 18, scale: 2, display: true };
 describe("real MathJax → embedded WASM → PNG", () => {
   it.each([
+    String.raw`\oiiint_{\Omega}f\,dV+\boldsymbol{\mu}`,
+    String.raw`\cancel{x}+\upalpha+\degree+\centernot\implies`,
+    String.raw`\braket{a|b}+\pdv{f}{x}+\qty(x+y)`,
+    String.raw`\begin{dcases}x&x\geq0\\-x&x<0\end{dcases}`,
     String.raw`x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}`,
     String.raw`\begin{pmatrix}a&b\\c&d\end{pmatrix}`,
     String.raw`\int_0^\infty e^{-x^2}\,dx=\frac{\sqrt{\pi}}{2}`,
@@ -24,6 +29,56 @@ describe("real MathJax → embedded WASM → PNG", () => {
       }
     } finally { renderer.dispose(); }
   });
+  it("typesets the original Maxwell blocks with both Chinese fonts and closed surface integrals", async () => {
+    const renderer = createMathRenderer();
+    const fixture = readFileSync(new URL("../tests/fixtures/synthetic/maxwell.md", import.meta.url), "utf8");
+    try {
+      const blocks = [...fixture.matchAll(/\$\$\n([\s\S]*?)\n\$\$/g)];
+      expect(blocks).toHaveLength(3);
+      for (const [, tex] of blocks) {
+        const result = await renderer.render({ ...input, tex, scale: 3 });
+        expect(result).toMatchObject({ ok: true });
+        if (result.ok) expect(result.uri.length).toBeGreaterThan(1_000);
+      }
+    } finally { renderer.dispose(); }
+  });
+
+  it("uses the real Chinese glyph advances and preserves space for the following term", async () => {
+    const renderer = createMathRenderer();
+    try {
+      const [short, long] = await Promise.all([
+        renderer.render({ ...input, tex: String.raw`\text{電場} + 1` }),
+        renderer.render({ ...input, tex: String.raw`\text{電場與電荷} + 1` }),
+      ]);
+      expect(short.ok && long.ok).toBe(true);
+      if (short.ok && long.ok) expect(long.width - short.width).toBe(3 * input.fontSize);
+    } finally { renderer.dispose(); }
+  });
+
+  it.each([
+    [String.raw`\unknownPlusCommand{x}`, "unknown-command"],
+    [String.raw`\text{🦄}`, "missing-glyph"],
+    [String.raw`\frac{a`, "invalid-tex"],
+    [String.raw`\href{https://example.com}{x}`, "blocked-command"],
+    [String.raw`\rule{99999em}{99999em}`, "limit"],
+  ])("classifies %s without hiding the next valid formula", async (tex, code) => {
+    const renderer = createMathRenderer();
+    try {
+      expect(await renderer.render({ ...input, tex })).toMatchObject({ ok: false, code });
+      expect(await renderer.render(input)).toMatchObject({ ok: true });
+    } finally { renderer.dispose(); }
+  });
+
+  it("preserves every term in one inline image across relation operators", async () => {
+    const renderer = createMathRenderer();
+    try {
+      const lhs = await renderer.render({ ...input, tex: String.raw`\mathbf D`, display: false });
+      const equation = await renderer.render({ ...input, tex: String.raw`\mathbf D=\varepsilon_0\mathbf E`, display: false });
+      expect(lhs.ok && equation.ok).toBe(true);
+      if (lhs.ok && equation.ok) expect(equation.width).toBeGreaterThan(lhs.width * 2);
+    } finally { renderer.dispose(); }
+  });
+
   it("typesets inline formulas smaller, with their depth below the baseline", async () => {
     const renderer = createMathRenderer();
     try {

@@ -1,15 +1,20 @@
 {
-  "id": "math-renderer",
+  "id": "math-renderer-plus",
+  "name": "Math Renderer Plus",
+  "description": "Render LaTeX and Chinese formula labels locally in Paseo replies.",
   "requirements": { "paseo": ">=0.13.0" },
   "translations": {
     "zh-CN": {
-      "description": "在已完成的 Paseo 回复中渲染块级和行内 LaTeX 公式，其余 Markdown 保持原生显示，可查看和复制公式源码，并提供原生回复模式。实验性 beta，适用于 Paseo 0.13 及以上版本。"
+      "name": "公式渲染增强版",
+      "description": "在 Paseo 回复中本地渲染 LaTeX 公式和中文标签。"
     }
   },
+  "media": ["images/desktop.png", "images/desktop-dark.png"],
   "build": [
     ["npm", "ci", "--ignore-scripts", "--legacy-peer-deps", "--no-audit", "--no-fund"],
     ["npm", "run", "prepare:markdown"],
     ["npm", "run", "prepare:wasm"],
+    ["npm", "run", "prepare:engine"],
     ["npm", "run", "typecheck"]
   ]
 }

@@ -46,7 +46,7 @@ function useFormula(tex: string, theme: PluginTheme, size: number, display: bool
   };
   const valid = renderInput.safeParse(input).success;
   const query = useQuery({
-    queryKey: ["math-renderer-v2", input], queryFn: () => rpc(input),
+    queryKey: ["math-renderer-plus", input], queryFn: () => rpc(input),
     enabled: valid && !source, staleTime: Infinity, gcTime: 60_000, retry: false,
   });
   return { valid, query };
@@ -56,6 +56,10 @@ export function Formula({ tex, raw, theme, compact }: { tex: string; raw: string
   const copy = useCopy();
   const { valid, query } = useFormula(tex, theme, 18, true, source);
   const result = query.data;
+  const error = !valid ? "Formula input exceeds render limits"
+    : query.isError ? "Could not reach the formula renderer"
+    : result && !result.ok ? result.reason : null;
+  const retryable = valid && !query.isFetching && (query.isError || result?.ok === false && result.code === "renderer-unavailable");
   const rawView = <Text selectable style={{ color: theme.colors.foreground, fontFamily: "monospace", fontSize: 14, lineHeight: 22 }}>{raw}</Text>;
   return <View testID="formula" style={{ gap: 6, minWidth: 0 }}>
     <View accessibilityRole="image" accessibilityLabel={"Formula: " + tex}>
@@ -68,10 +72,10 @@ export function Formula({ tex, raw, theme, compact }: { tex: string; raw: string
     <View testID="formula-actions" style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
       <Action label={source ? "Show formula" : "Show LaTeX"} onPress={() => setSource(v => !v)} theme={theme} compact={compact} />
       <Action label="Copy LaTeX" onPress={() => { void copy(tex); }} theme={theme} compact={compact} />
-      {!source && (!valid || query.isError || (result && !result.ok)) ?
-        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>Unable to render · Source preserved</Text> :
+      {!source && error ?
+        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>{error} · Source preserved</Text> :
         !source && query.isPending ? <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>Rendering locally…</Text> : null}
-      {!source && valid && !query.isFetching && (query.isError || (result && !result.ok)) ?
+      {!source && retryable ?
         <Action label="Retry" onPress={() => { void query.refetch(); }} theme={theme} compact={compact} /> : null}
     </View>
   </View>;

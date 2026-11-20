@@ -18,5 +18,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+      - run: npm run prepare:markdown
       - run: npm run prepare:wasm
+      - run: npm run prepare:engine
       - run: npm run check

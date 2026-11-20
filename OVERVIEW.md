@@ -1,10 +1,5 @@
-Math Renderer typesets block and inline LaTeX formulas in completed assistant replies as images. Block formulas have Show LaTeX and Copy LaTeX actions; tapping an inline formula shows its source. It is an experimental beta and requires Paseo 0.13.0 or newer on both the app and the daemon.
+Math Renderer Plus typesets inline and display LaTeX in completed assistant replies, including Chinese labels inside formulas. The Paseo daemon turns each expression into a PNG using MathJax and bundled fonts. Formula text and images travel between the daemon and the Paseo client. Rendering uses no external service.
 
-Rendering happens on the daemon host with MathJax and a bundled resvg WASM module, with no external rendering service. Replies stay native while streaming and formulas appear once the reply is complete. Parts of a reply without a formula, such as tables, images and code, keep Paseo's own Markdown rendering.
+Requires Paseo 0.13 or newer with plugins enabled on the selected daemon. Git installation also needs Node.js 22 or later and npm on that host.
 
-**Limits:**
-
-- Paragraphs, lists and quotes that contain a formula are drawn by the plugin's own simple Markdown renderer, so code highlighting, workspace file links and native text selection are not reproduced there. Do not combine it with other plugins that replace assistant messages.
-- An image, table or HTML inside a paragraph or list that also contains a formula keeps the whole reply native, as do very large replies.
-- Chat Find finds text in rendered replies but not formula source. A Command Center action switches back to native replies for that.
-- It was tested on a Paseo 0.13.2 daemon in the 0.13.2 web client. The desktop app and native iOS and Android are not accepted as tested.
+Block formulas can be scrolled horizontally, and their LaTeX can be viewed or copied. Unsupported commands, missing glyphs and size limits preserve the original source. Avoid enabling multiple plugins that replace assistant replies. The first release was verified on macOS in Paseo's desktop web UI. The native iOS and Android apps are awaiting device testing.

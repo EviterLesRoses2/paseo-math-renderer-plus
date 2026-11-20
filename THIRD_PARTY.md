@@ -34,3 +34,14 @@ https://github.com/getpaseo/paseo/pull/2562
 Seven unmodified Paseo source fixtures are Apache-2.0, pinned to v0.13.2 commit
 d2941157a8f91512daf54fc688241d416e8f5ebd. See tests/fixtures/paseo-0.13/README.md
 and its LICENSE. They are test-only and excluded from production bundles.
+
+## Math Renderer Plus additions
+
+| Component | Version | License |
+| --- | --- | --- |
+| MathJax `@mathjax/src` | 4.1.3 | Apache-2.0; see the locked package's LICENSE and [MathJax source](https://github.com/mathjax/MathJax-src) |
+| MathJax New Computer Modern SVG assets | 4.1.3 | See the package license and [font repository](https://github.com/mathjax/MathJax-newcm-font) |
+| fontkit | 2.0.4 | MIT; see the locked package's LICENSE and [source](https://github.com/foliojs/fontkit) |
+| Noto Sans CJK SC Regular | Sans2.004, unmodified | SIL Open Font License 1.1; see [OFL.txt](third-party/fonts/OFL.txt) and [upstream release](https://github.com/notofonts/noto-cjk/tree/Sans2.004) |
+
+The previous MathJax 3 entries above describe the upstream renderer. This fork uses the packages and font data in the table above.
