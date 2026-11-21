@@ -1,5 +1,7 @@
 # Verification
 
+The v1.4 release passed 105 automated tests. In Chrome, changing the content font size from 15 to 19 resized text, inline formulas, and display formulas in the same past reply. The 19 setting remained effective in a narrow viewport. The user confirmed the font-size fix on a real iPhone in the native Paseo app.
+
 The v1.3 release passed 105 automated tests. A Chrome test against a running Paseo daemon verified centered display formulas, hover actions without layout shift, clipboard copying, source toggling, keyboard activation, touch emulation, and horizontal scrolling at 390 px.
 
 The v0.1.2 regression suite passed 105 tests. It includes stretchy braces with Chinese labels, formula tables, long replies, isolated Markdown fallback, and bounded client request scheduling.

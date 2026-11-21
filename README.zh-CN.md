@@ -11,7 +11,7 @@
 需要 Paseo 0.13 或更新版本，并在目标主机上启用插件。通过 Git 安装时，主机需要 Node.js 22 或更新版本及 npm。
 
 ```sh
-paseo plugin install git:EviterLesRoses2/paseo-math-renderer-plus --ref v1.3
+paseo plugin install git:EviterLesRoses2/paseo-math-renderer-plus --ref v1.4
 paseo plugin ls math-renderer-plus
 ```
 

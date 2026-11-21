@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Follow Paseo’s content font size for text in messages rendered by the plugin, including past replies.
+- Match inline formulas to the surrounding text and render display formulas at 110% of the content font size.
+- Verify font-size synchronization in desktop web layouts and on a real iPhone.
+
 ## 1.3.0
 
 - Center display formulas while preserving horizontal scrolling.
