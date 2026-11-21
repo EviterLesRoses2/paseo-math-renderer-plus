@@ -54,31 +54,57 @@ function useFormula(tex: string, theme: PluginTheme, size: number, display: bool
 }
 export function Formula({ tex, raw, theme, compact }: { tex: string; raw: string; theme: PluginTheme; compact: boolean }) {
   const [source, setSource] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [opened, setOpened] = useState(false);
   const copy = useCopy();
   const { valid, query } = useFormula(tex, theme, 18, true, source);
   const result = query.data;
+  const image = !source && result?.ok ? result : undefined;
   const error = !valid ? "Formula input exceeds render limits"
     : query.isError ? "Could not reach the formula renderer"
     : result && !result.ok ? result.reason : null;
   const retryable = valid && !query.isFetching && (query.isError || result?.ok === false && result.code === "renderer-unavailable");
+  const showActions = hovered || opened;
   const rawView = <Text selectable style={{ color: theme.colors.foreground, fontFamily: "monospace", fontSize: 14, lineHeight: 22 }}>{raw}</Text>;
-  return <View testID="formula" style={{ gap: 6, minWidth: 0 }}>
-    <View accessibilityRole="image" accessibilityLabel={"Formula: " + tex}>
-      <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 2 }}>
-        {!source && result?.ok
-          ? <FormulaImage key={result.uri} uri={result.uri} width={result.width} height={result.height} fallback={rawView} />
-          : rawView}
+  return <View testID="formula" style={{ gap: 6, minWidth: 0, zIndex: showActions ? 1 : 0 }}>
+    <View testID="formula-region"
+      onPointerEnter={event => { if (event.nativeEvent.pointerType === "mouse") setHovered(true); }}
+      onPointerLeave={event => { if (event.nativeEvent.pointerType === "mouse") setHovered(false); }}
+      style={{ alignSelf: "center", width: image ? image.width + 4 : "100%", maxWidth: "100%" }}>
+      <ScrollView horizontal style={{ flexGrow: 0 }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingVertical: 8, paddingHorizontal: 2 }}>
+        <Pressable testID="formula-trigger" accessibilityRole="button"
+          accessibilityLabel={"Formula: " + tex}
+          accessibilityHint="Show or hide LaTeX actions"
+          accessibilityState={{ expanded: showActions }}
+          style={{ flexShrink: 0 }}
+          onPress={() => { if (!hovered) setOpened(value => !value); }}>
+          {image
+            ? <FormulaImage key={image.uri} uri={image.uri} width={image.width} height={image.height} fallback={rawView} />
+            : rawView}
+        </Pressable>
       </ScrollView>
+      {showActions && <View testID="formula-actions" style={{
+        alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 4,
+        backgroundColor: theme.colors.surface1, borderRadius: 6,
+        ...(hovered && !opened ? { position: "absolute", top: "100%", zIndex: 1 } : {}),
+      }}>
+        <Action label={source ? "Show formula" : "Show LaTeX"} onPress={() => setSource(value => !value)} theme={theme} compact={compact} />
+        <Action label="Copy LaTeX" onPress={() => { void copy(tex); }} theme={theme} compact={compact} />
+      </View>}
     </View>
-    <View testID="formula-actions" style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
-      <Action label={source ? "Show formula" : "Show LaTeX"} onPress={() => setSource(v => !v)} theme={theme} compact={compact} />
-      <Action label="Copy LaTeX" onPress={() => { void copy(tex); }} theme={theme} compact={compact} />
-      {!source && error ?
-        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>{error} · Source preserved</Text> :
-        !source && query.isPending ? <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>Rendering locally…</Text> : null}
-      {!source && retryable ?
-        <Action label="Retry" onPress={() => { void query.refetch(); }} theme={theme} compact={compact} /> : null}
-    </View>
+    {!source && (error || query.isPending || retryable) && <View style={{
+      flexDirection: "row", justifyContent: "center", flexWrap: "wrap", alignItems: "center", gap: 4,
+    }}>
+      {error
+        ? <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>{error} · Source preserved</Text>
+        : query.isPending
+          ? <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>Rendering locally…</Text>
+          : null}
+      {retryable
+        ? <Action label="Retry" onPress={() => { void query.refetch(); }} theme={theme} compact={compact} />
+        : null}
+    </View>}
   </View>;
 }
 

@@ -1,8 +1,8 @@
 {
   "name": "paseo-math-renderer-plus",
-  "version": "0.1.2",
+  "version": "1.3.0",
   "type": "module",
-  "description": "Local LaTeX and Chinese formula rendering for Paseo",
+  "description": "Local LaTeX and Chinese formula rendering for Paseo, verified on iPhone",
   "license": "MIT",
   "author": "EviterLesRoses2",
   "repository": {

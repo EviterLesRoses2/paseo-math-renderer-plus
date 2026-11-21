@@ -1,12 +1,12 @@
 {
   "id": "math-renderer-plus",
   "name": "Math Renderer Plus",
-  "description": "Render LaTeX and Chinese formula labels locally in Paseo replies.",
+  "description": "Render LaTeX and Chinese formula labels in Paseo, including in the native iOS app.",
   "requirements": { "paseo": ">=0.13.0" },
   "translations": {
     "zh-CN": {
       "name": "公式渲染增强版",
-      "description": "在 Paseo 回复中本地渲染 LaTeX 公式和中文标签。"
+      "description": "在 Paseo 回复中本地渲染 LaTeX 公式和中文标签，支持 iPhone 原生客户端。"
     }
   },
   "media": ["images/desktop.png", "images/desktop-dark.png"],
